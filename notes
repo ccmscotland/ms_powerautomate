@@ -1,0 +1,50 @@
+**Base flow (shared by all items):** Trigger *When a new response is submitted* (Forms) → *Get response details* → *Create item* (SharePoint). The trigger only returns a Response ID, so all answer-based logic must come after *Get response details*.
+
+1. **Update status workflow (New > In Progress > Rejected/Approved)**
+   * **SharePoint:** Add a Choice column `Status` with the values `New`, `In Progress`, `Approved` and `Rejected`. Set the default to `New`.
+   * **Power Automate:** Set `Status = New` in *Create item*. Use *Update item* to set `In Progress`, then run *Start and wait for an approval*. Add a Condition on `outcome` equals `Approve`, then use *Update item* to set `Approved` or `Rejected`. Store the approver's comments in a separate column if needed.
+
+2. **Add validation for incomplete fields**
+   * **MS Forms:** Mark core questions as Required. This stops most blank submissions at the source.
+   * **Power Automate:** Required fields can't catch fields hidden by branching or answers that are only whitespace. For those, add a Condition such as `empty(trim(outputs('Get_response_details')?['body/<fieldId>']))`. If true, set `Status = Rejected` and use *Send an email (V2)* to ask the responder to resubmit, then *Terminate*.
+
+3. **Update email messaging based on Phase**
+   * **Power Automate:** Add a *Switch* on the `Phase` answer.
+     * **Phase 1 / Phase 2 cases:** Send an email confirming the 12–24 hour response window.
+     * **Phase 3 case:** Send an email advising that DTB Approval is required. Optionally, route this case to a separate approval step.
+     * **Default case:** Notify the admin of an unexpected value.
+
+4. **Add duplicate site warning**
+   * **SharePoint:** Add a Yes/No column `Duplicate Warning`.
+   * **Power Automate:** Run *Get items* **before** *Create item* so the new submission doesn't match itself. Use the Filter Query `SiteName eq '<SiteName answer>'`. If you check after creating the item, add `and ID ne <new ID>`.
+   * Add a Condition on `length(body('Get_items')?['value'])` greater than `0`. If true, set `Duplicate Warning = Yes` and/or email the admin a link to the existing item(s).
+
+5. **Update Teams options**
+   * **MS Forms:** Edit the choice question options to `NewCo to Open`, `RemainCo to Open` and `Open to RemainCo/NewCo`.
+   * **SharePoint:** Update the Choice column values to match exactly. Existing items keep their old values, so bulk-edit them or allow fill-in values.
+   * **Power Automate:** No changes are needed if the text matches exactly. A mismatch makes *Create item* fail or write a blank value.
+
+6. **Change "Required Duration" field to mandatory**
+   * **MS Forms:** Turn on the Required toggle for "Required Duration".
+   * **SharePoint:** In column settings, set "Require that this column contains information" to Yes.
+   * **Power Automate:** *Create item* now fails if the value is blank. Do both changes together, and add a Configure run after / error-handling branch if older form versions are still in use.
+
+7. **Confirm/Update SharePoint Site to Shared**
+   * **SharePoint:** In Site permissions, add the target users or groups (e.g., Members) to the site. The list inherits these permissions by default.
+   * **Power Automate:** For per-item access, use *Grant access to an item or a folder* with the submitter's or approver's email. For finer control, use *Send an HTTP request to SharePoint* (`breakroleinheritance` / `addroleassignment`). Run the flow under a service account that has site owner rights.
+
+8. **Implement Test Mode Trigger**
+   * **Option A – Per submission:** Add a Forms question "Is this a test?". After *Get response details*, add a Condition. If `Yes`, write the item with `Status = Test` (or to a separate Test list), skip approvals and emails, and *Terminate*. A Trigger Condition can't do this because the Forms trigger output doesn't contain answers.
+   * **Option B – Global switch:** Create a SharePoint "Flow Settings" list with a `TestMode` Yes/No item. At the start of the flow, use *Get item* to read it. If it's on, send all emails to the admin only and tag items as Test.
+   * **Option C:** Treat submissions from specific test accounts as tests by checking the `Responders' Email` field.
+
+9. **Add Form URL/Name Lookup**
+   * **Power Automate:** The Forms connector doesn't return the form name. The Form ID is known because it's set in the trigger.
+     * **Simple approach:** Initialize `FormName` and `FormURL` variables. The URL can be built as `https://forms.office.com/Pages/ResponsePage.aspx?id=<FormId>`. Write both to text or hyperlink columns in *Create item*.
+     * **Scalable approach:** Create a SharePoint "Forms Register" list containing Form ID, Name and URL. Use *Get items* filtered on the Form ID so multiple forms or flows share one lookup.
+
+10. **Add submission validation to verify Site/Team Owner**
+    * **Prerequisite:** The form must be set to "Only people in my organization" so `Responders' Email` is captured.
+    * **For SharePoint site owners:** Use *Send an HTTP request to SharePoint* with `GET /_api/web/AssociatedOwnerGroup/Users` against the target site URL. Don't use `/siteusers`, which returns all users.
+    * **For Team/M365 Group owners:** Get the group ID via `/_api/site/GroupId`, then call Graph `/v1.0/groups/{id}/owners` using the Office 365 Groups *Send an HTTP request* action.
+    * **Check:** Use *Select* to extract the owner emails (lowercased), then add a Condition: `contains(body('Select'), toLower(<Responders' Email>))`. If false, set `Status = Rejected`, send the auto-rejection email and *Terminate*.
