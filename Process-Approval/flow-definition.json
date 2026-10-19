@@ -1,0 +1,1307 @@
+{
+  "name": "2f08f0e2-320b-4997-bcb9-0fd6ff143344",
+  "id": "/providers/Microsoft.ProcessSimple/environments/Default-36037c25-6fc1-4418-8edd-abbc98e96cbc/flows/2f08f0e2-320b-4997-bcb9-0fd6ff143344",
+  "type": "Microsoft.ProcessSimple/environments/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Process Approval - TEST (manual trigger)",
+    "userType": "Owner",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "RequestTitle": {
+                  "title": "RequestTitle",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Request title",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "RequestorName": {
+                  "title": "RequestorName",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Requestor name",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "RequestorEmail": {
+                  "title": "RequestorEmail",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Requestor email",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "DateRequested": {
+                  "title": "DateRequested",
+                  "type": "string",
+                  "format": "date",
+                  "x-ms-dynamically-added": true,
+                  "description": "Date requested (yyyy-MM-dd)",
+                  "x-ms-content-hint": "DATE"
+                },
+                "RequestorBusinessUnit": {
+                  "title": "RequestorBusinessUnit",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "AUK, AUM or AAM",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "RequestType": {
+                  "title": "RequestType",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Teams, SharePoint or One Time Transfer",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "AlignmentChangeTeams": {
+                  "title": "AlignmentChangeTeams",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Alignment change (Teams)",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "AlignmentChangeSharePoint": {
+                  "title": "AlignmentChangeSharePoint",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Alignment change (SharePoint)",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "AlignmentChangeOthers": {
+                  "title": "AlignmentChangeOthers",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Alignment change (Others)",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "RequestURL": {
+                  "title": "RequestURL",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Request URL",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "SourceSiteAppName": {
+                  "title": "SourceSiteAppName",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Source site / app name",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "IsTest": {
+                  "title": "IsTest",
+                  "type": "boolean",
+                  "x-ms-dynamically-added": true,
+                  "description": "Test mode: skips approval and requestor emails",
+                  "x-ms-content-hint": "BOOLEAN"
+                }
+              },
+              "required": [
+                "RequestTitle",
+                "RequestorName",
+                "RequestorEmail",
+                "DateRequested",
+                "RequestorBusinessUnit",
+                "RequestType",
+                "RequestURL",
+                "SourceSiteAppName",
+                "IsTest"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Initialize_FormName": {
+          "runAfter": {},
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "FormName",
+                "type": "string",
+                "value": "Process Approval Request (TEST)"
+              }
+            ]
+          }
+        },
+        "Initialize_FormURL": {
+          "runAfter": {
+            "Initialize_FormName": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "FormURL",
+                "type": "string",
+                "value": "https://forms.office.com/Pages/ResponsePage.aspx?id=PLACEHOLDER"
+              }
+            ]
+          }
+        },
+        "Initialize_AdminEmail": {
+          "runAfter": {
+            "Initialize_FormURL": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "AdminEmail",
+                "type": "string",
+                "value": "chris.mitchell@chrismitchellphotography.co.uk"
+              }
+            ]
+          }
+        },
+        "Compose_IsTest": {
+          "runAfter": {
+            "Initialize_AdminEmail": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@equals(coalesce(triggerBody()?['IsTest'], false), true)"
+        },
+        "Validation_Check": {
+          "actions": {
+            "Create_item_Rejected": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PostItem"
+                },
+                "parameters": {
+                  "dataset": "https://cjmprojectsltd.sharepoint.com/sites/LexNet",
+                  "table": "Process Approval",
+                  "item/Title": "@{if(empty(trim(coalesce(triggerBody()?['RequestTitle'], ''))), '(missing title)', triggerBody()?['RequestTitle'])}",
+                  "item/RequestorName": "@triggerBody()?['RequestorName']",
+                  "item/RequestorEmail": "@triggerBody()?['RequestorEmail']",
+                  "item/SourceSiteAppName": "@triggerBody()?['SourceSiteAppName']",
+                  "item/RequestStatus/Value": "Rejected",
+                  "item/ApproverComments": "Rejected automatically: one or more required fields (Request Title, Requestor Name, Requestor Email, Source Site/App Name) were empty.",
+                  "item/FormName": "@variables('FormName')",
+                  "item/IsTest": "@outputs('Compose_IsTest')"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "If_not_test_email_requestor": {
+              "actions": {
+                "Send_resubmit_email": {
+                  "runAfter": {},
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                      "connectionName": "shared_office365",
+                      "operationId": "SendEmailV2"
+                    },
+                    "parameters": {
+                      "emailMessage/To": "@triggerBody()?['RequestorEmail']",
+                      "emailMessage/Subject": "Process Approval request incomplete - please resubmit",
+                      "emailMessage/Body": "<p>Hello @{triggerBody()?['RequestorName']},</p><p>Your Process Approval request could not be processed because one or more required fields were empty (Request Title, Requestor Name, Requestor Email, Source Site/App Name).</p><p>Please resubmit the form with all required fields completed.</p>",
+                      "emailMessage/Importance": "Normal"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  }
+                }
+              },
+              "runAfter": {
+                "Create_item_Rejected": [
+                  "Succeeded"
+                ]
+              },
+              "else": {
+                "actions": {}
+              },
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@outputs('Compose_IsTest')",
+                      false
+                    ]
+                  },
+                  {
+                    "equals": [
+                      "@empty(trim(coalesce(triggerBody()?['RequestorEmail'], '')))",
+                      false
+                    ]
+                  }
+                ]
+              },
+              "type": "If"
+            },
+            "Terminate_Cancelled": {
+              "runAfter": {
+                "If_not_test_email_requestor": [
+                  "Succeeded",
+                  "Skipped"
+                ]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Cancelled"
+              }
+            }
+          },
+          "runAfter": {
+            "Compose_IsTest": [
+              "Succeeded"
+            ]
+          },
+          "else": {
+            "actions": {}
+          },
+          "expression": {
+            "or": [
+              {
+                "equals": [
+                  "@empty(trim(coalesce(triggerBody()?['RequestTitle'], '')))",
+                  true
+                ]
+              },
+              {
+                "equals": [
+                  "@empty(trim(coalesce(triggerBody()?['RequestorName'], '')))",
+                  true
+                ]
+              },
+              {
+                "equals": [
+                  "@empty(trim(coalesce(triggerBody()?['RequestorEmail'], '')))",
+                  true
+                ]
+              },
+              {
+                "equals": [
+                  "@empty(trim(coalesce(triggerBody()?['SourceSiteAppName'], '')))",
+                  true
+                ]
+              }
+            ]
+          },
+          "type": "If"
+        },
+        "Get_items_duplicate_check": {
+          "runAfter": {
+            "Validation_Check": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItems"
+            },
+            "parameters": {
+              "dataset": "https://cjmprojectsltd.sharepoint.com/sites/LexNet",
+              "table": "Process Approval",
+              "$filter": "SourceSiteAppName eq '@{replace(trim(coalesce(triggerBody()?['SourceSiteAppName'], '')), '''', '''''')}'",
+              "$top": 50
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Compose_IsDuplicate": {
+          "runAfter": {
+            "Get_items_duplicate_check": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@greater(length(coalesce(body('Get_items_duplicate_check')?['value'], json('[]'))), 0)"
+        },
+        "Create_item": {
+          "runAfter": {
+            "Compose_IsDuplicate": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PostItem"
+            },
+            "parameters": {
+              "dataset": "https://cjmprojectsltd.sharepoint.com/sites/LexNet",
+              "table": "Process Approval",
+              "item/Title": "@triggerBody()?['RequestTitle']",
+              "item/RequestorName": "@triggerBody()?['RequestorName']",
+              "item/RequestorEmail": "@triggerBody()?['RequestorEmail']",
+              "item/DateRequested": "@if(empty(triggerBody()?['DateRequested']), null, triggerBody()?['DateRequested'])",
+              "item/RequestorBusinessUnit/Value": "@if(empty(triggerBody()?['RequestorBusinessUnit']), null, triggerBody()?['RequestorBusinessUnit'])",
+              "item/RequestType/Value": "@if(empty(triggerBody()?['RequestType']), null, triggerBody()?['RequestType'])",
+              "item/AlignmentChangeTeams/Value": "@if(empty(triggerBody()?['AlignmentChangeTeams']), null, triggerBody()?['AlignmentChangeTeams'])",
+              "item/AlignmentChangeSharePoint/Value": "@if(empty(triggerBody()?['AlignmentChangeSharePoint']), null, triggerBody()?['AlignmentChangeSharePoint'])",
+              "item/AlignmentChangeOthers/Value": "@if(empty(triggerBody()?['AlignmentChangeOthers']), null, triggerBody()?['AlignmentChangeOthers'])",
+              "item/SourceSiteAppName": "@triggerBody()?['SourceSiteAppName']",
+              "item/RequestStatus/Value": "@{if(outputs('Compose_IsDuplicate'), 'Duplicate', 'New')}",
+              "item/DuplicateWarning": "@outputs('Compose_IsDuplicate')",
+              "item/FormName": "@variables('FormName')",
+              "item/IsTest": "@outputs('Compose_IsTest')"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Set_hyperlink_columns": {
+          "runAfter": {
+            "Create_item": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "HttpRequest"
+            },
+            "parameters": {
+              "dataset": "https://cjmprojectsltd.sharepoint.com/sites/LexNet",
+              "parameters/method": "POST",
+              "parameters/uri": "_api/web/lists/getbytitle('Process Approval')/items(@{body('Create_item')?['ID']})/ValidateUpdateListItem",
+              "parameters/headers": {
+                "Accept": "application/json;odata=nometadata",
+                "Content-Type": "application/json;odata=nometadata"
+              },
+              "parameters/body": "{\"formValues\":[{\"FieldName\":\"RequestURL\",\"FieldValue\":\"@{if(empty(triggerBody()?['RequestURL']), '', concat(replace(triggerBody()?['RequestURL'], ',', ',,'), ', ', replace(triggerBody()?['RequestURL'], ',', ',,')))}\"},{\"FieldName\":\"FormURL\",\"FieldValue\":\"@{variables('FormURL')}, @{variables('FormName')}\"}],\"bNewDocumentUpdate\":false}"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "description": "RequestURL and FormURL are hyperlink columns; set them via ValidateUpdateListItem so they work regardless of connector hyperlink support."
+        },
+        "Duplicate_Check": {
+          "actions": {
+            "Select_existing_item_links": {
+              "runAfter": {},
+              "type": "Select",
+              "inputs": {
+                "from": "@body('Get_items_duplicate_check')?['value']",
+                "select": "<li><a href=\"@{item()?['{Link}']}\">#@{item()?['ID']} - @{item()?['Title']}</a> (status: @{item()?['RequestStatus']?['Value']})</li>"
+              }
+            },
+            "If_not_test_email_admin_duplicate": {
+              "actions": {
+                "Send_duplicate_email_to_admin": {
+                  "runAfter": {},
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                      "connectionName": "shared_office365",
+                      "operationId": "SendEmailV2"
+                    },
+                    "parameters": {
+                      "emailMessage/To": "@variables('AdminEmail')",
+                      "emailMessage/Subject": "Duplicate Process Approval request: @{triggerBody()?['SourceSiteAppName']}",
+                      "emailMessage/Body": "<p>A new Process Approval request was submitted for <b>@{triggerBody()?['SourceSiteAppName']}</b>, which already has request(s) on the list.</p><p>New item (marked Duplicate): <a href=\"@{body('Create_item')?['{Link}']}\">#@{body('Create_item')?['ID']} - @{body('Create_item')?['Title']}</a></p><p>Existing item(s):</p><ul>@{join(body('Select_existing_item_links'), '')}</ul><p>Submitted by @{triggerBody()?['RequestorName']} (@{triggerBody()?['RequestorEmail']}).</p>",
+                      "emailMessage/Importance": "Normal"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  }
+                }
+              },
+              "runAfter": {
+                "Select_existing_item_links": [
+                  "Succeeded"
+                ]
+              },
+              "else": {
+                "actions": {}
+              },
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@outputs('Compose_IsTest')",
+                      false
+                    ]
+                  }
+                ]
+              },
+              "type": "If"
+            },
+            "Terminate_Duplicate": {
+              "runAfter": {
+                "If_not_test_email_admin_duplicate": [
+                  "Succeeded",
+                  "Skipped"
+                ]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Succeeded"
+              }
+            }
+          },
+          "runAfter": {
+            "Set_hyperlink_columns": [
+              "Succeeded",
+              "Failed"
+            ]
+          },
+          "else": {
+            "actions": {}
+          },
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@outputs('Compose_IsDuplicate')",
+                  true
+                ]
+              }
+            ]
+          },
+          "type": "If"
+        },
+        "Compose_Phase": {
+          "runAfter": {
+            "Duplicate_Check": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@coalesce(body('Create_item')?['Phase'], '')"
+        },
+        "Phase_Emails": {
+          "actions": {
+            "Switch_on_Phase": {
+              "runAfter": {},
+              "cases": {
+                "Phase_1": {
+                  "case": "Phase 1",
+                  "actions": {
+                    "Email_requestor_Phase_1": {
+                      "runAfter": {},
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                          "connectionName": "shared_office365",
+                          "operationId": "SendEmailV2"
+                        },
+                        "parameters": {
+                          "emailMessage/To": "@triggerBody()?['RequestorEmail']",
+                          "emailMessage/Subject": "We've received your request: @{triggerBody()?['RequestTitle']}",
+                          "emailMessage/Body": "<p>Hello @{triggerBody()?['RequestorName']},</p><p>Thank you for your Process Approval request for <b>@{triggerBody()?['SourceSiteAppName']}</b> (request #@{body('Create_item')?['ID']}, Phase 1).</p><p>You can expect a response within 12–24 hours.</p>",
+                          "emailMessage/Importance": "Normal"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    }
+                  }
+                },
+                "Phase_2": {
+                  "case": "Phase 2",
+                  "actions": {
+                    "Email_requestor_Phase_2": {
+                      "runAfter": {},
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                          "connectionName": "shared_office365",
+                          "operationId": "SendEmailV2"
+                        },
+                        "parameters": {
+                          "emailMessage/To": "@triggerBody()?['RequestorEmail']",
+                          "emailMessage/Subject": "We've received your request: @{triggerBody()?['RequestTitle']}",
+                          "emailMessage/Body": "<p>Hello @{triggerBody()?['RequestorName']},</p><p>Thank you for your Process Approval request for <b>@{triggerBody()?['SourceSiteAppName']}</b> (request #@{body('Create_item')?['ID']}, Phase 2).</p><p>You can expect a response within 12–24 hours.</p>",
+                          "emailMessage/Importance": "Normal"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    }
+                  }
+                },
+                "Phase_3": {
+                  "case": "Phase 3",
+                  "actions": {
+                    "Email_requestor_Phase_3": {
+                      "runAfter": {},
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                          "connectionName": "shared_office365",
+                          "operationId": "SendEmailV2"
+                        },
+                        "parameters": {
+                          "emailMessage/To": "@triggerBody()?['RequestorEmail']",
+                          "emailMessage/Subject": "DTB Approval required: @{triggerBody()?['RequestTitle']}",
+                          "emailMessage/Body": "<p>Hello @{triggerBody()?['RequestorName']},</p><p>Thank you for your Process Approval request for <b>@{triggerBody()?['SourceSiteAppName']}</b> (request #@{body('Create_item')?['ID']}, Phase 3).</p><p>Requests in this phase require <b>DTB Approval</b> before they can proceed. We will be in touch once that has been obtained.</p>",
+                          "emailMessage/Importance": "Normal"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    }
+                  }
+                },
+                "Phase_4": {
+                  "case": "Phase 4",
+                  "actions": {
+                    "Email_requestor_Phase_4": {
+                      "runAfter": {},
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                          "connectionName": "shared_office365",
+                          "operationId": "SendEmailV2"
+                        },
+                        "parameters": {
+                          "emailMessage/To": "@triggerBody()?['RequestorEmail']",
+                          "emailMessage/Subject": "DTB Approval required: @{triggerBody()?['RequestTitle']}",
+                          "emailMessage/Body": "<p>Hello @{triggerBody()?['RequestorName']},</p><p>Thank you for your Process Approval request for <b>@{triggerBody()?['SourceSiteAppName']}</b> (request #@{body('Create_item')?['ID']}, Phase 4).</p><p>Requests in this phase require <b>DTB Approval</b> before they can proceed. We will be in touch once that has been obtained.</p><p><i>Phase 4 – to be confirmed.</i></p>",
+                          "emailMessage/Importance": "Normal"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "actions": {
+                  "Email_admin_unexpected_Phase": {
+                    "runAfter": {},
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                        "connectionName": "shared_office365",
+                        "operationId": "SendEmailV2"
+                      },
+                      "parameters": {
+                        "emailMessage/To": "@variables('AdminEmail')",
+                        "emailMessage/Subject": "Process Approval: unexpected Phase value on item #@{body('Create_item')?['ID']}",
+                        "emailMessage/Body": "<p>Item <a href=\"@{body('Create_item')?['{Link}']}\">#@{body('Create_item')?['ID']} - @{body('Create_item')?['Title']}</a> has an unexpected Phase value: '<b>@{outputs('Compose_Phase')}</b>'.</p><p>No acknowledgement email was sent to the requestor (@{triggerBody()?['RequestorEmail']}).</p>",
+                        "emailMessage/Importance": "High"
+                      },
+                      "authentication": "@parameters('$authentication')"
+                    }
+                  }
+                }
+              },
+              "expression": "@outputs('Compose_Phase')",
+              "type": "Switch"
+            }
+          },
+          "runAfter": {
+            "Compose_Phase": [
+              "Succeeded"
+            ]
+          },
+          "else": {
+            "actions": {}
+          },
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@outputs('Compose_IsTest')",
+                  false
+                ]
+              }
+            ]
+          },
+          "type": "If"
+        },
+        "Update_item_In_Progress": {
+          "runAfter": {
+            "Phase_Emails": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "parameters": {
+              "dataset": "https://cjmprojectsltd.sharepoint.com/sites/LexNet",
+              "table": "Process Approval",
+              "id": "@body('Create_item')?['ID']",
+              "item/Title": "@body('Create_item')?['Title']",
+              "item/RequestStatus/Value": "In Progress"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Approval_Workflow": {
+          "actions": {
+            "Update_item_Approved_Test": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PatchItem"
+                },
+                "parameters": {
+                  "dataset": "https://cjmprojectsltd.sharepoint.com/sites/LexNet",
+                  "table": "Process Approval",
+                  "id": "@body('Create_item')?['ID']",
+                  "item/Title": "@body('Create_item')?['Title']",
+                  "item/RequestStatus/Value": "Approved",
+                  "item/ApproverComments": "Test mode - approval skipped"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            }
+          },
+          "runAfter": {
+            "Update_item_In_Progress": [
+              "Succeeded"
+            ]
+          },
+          "else": {
+            "actions": {
+              "Start_and_wait_for_an_approval": {
+                "runAfter": {},
+                "type": "OpenApiConnectionWebhook",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+                    "connectionName": "shared_approvals",
+                    "operationId": "StartAndWaitForAnApproval"
+                  },
+                  "parameters": {
+                    "approvalType": "Basic",
+                    "WebhookApprovalCreationInput/title": "Process Approval: @{triggerBody()?['RequestTitle']}",
+                    "WebhookApprovalCreationInput/assignedTo": "chris.mitchell@cjmprojects.co.uk",
+                    "WebhookApprovalCreationInput/details": "**Request:** @{triggerBody()?['RequestTitle']}\\\n\\\n**Requestor:** @{triggerBody()?['RequestorName']} (@{triggerBody()?['RequestorEmail']})\\\n\\\n**Business unit:** @{triggerBody()?['RequestorBusinessUnit']}\\\n\\\n**Date requested:** @{triggerBody()?['DateRequested']}\\\n\\\n**Request type:** @{triggerBody()?['RequestType']}\\\n\\\n**Alignment change (Teams):** @{triggerBody()?['AlignmentChangeTeams']}\\\n\\\n**Alignment change (SharePoint):** @{triggerBody()?['AlignmentChangeSharePoint']}\\\n\\\n**Alignment change (Others):** @{triggerBody()?['AlignmentChangeOthers']}\\\n\\\n**Source site / app:** @{triggerBody()?['SourceSiteAppName']}\\\n\\\n**Request URL:** @{triggerBody()?['RequestURL']}\\\n\\\n**Phase:** @{outputs('Compose_Phase')}",
+                    "WebhookApprovalCreationInput/itemLink": "@body('Create_item')?['{Link}']",
+                    "WebhookApprovalCreationInput/itemLinkDescription": "Request #@{body('Create_item')?['ID']} on the Process Approval list",
+                    "WebhookApprovalCreationInput/enableNotifications": true,
+                    "WebhookApprovalCreationInput/enableReassignment": true
+                  },
+                  "authentication": "@parameters('$authentication')"
+                }
+              },
+              "Condition_Outcome_Approve": {
+                "actions": {
+                  "Update_item_Approved": {
+                    "runAfter": {},
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                        "connectionName": "shared_sharepointonline",
+                        "operationId": "PatchItem"
+                      },
+                      "parameters": {
+                        "dataset": "https://cjmprojectsltd.sharepoint.com/sites/LexNet",
+                        "table": "Process Approval",
+                        "id": "@body('Create_item')?['ID']",
+                        "item/Title": "@body('Create_item')?['Title']",
+                        "item/RequestStatus/Value": "Approved",
+                        "item/ApproverComments": "@{coalesce(first(body('Start_and_wait_for_an_approval')?['responses'])?['comments'], '')}"
+                      },
+                      "authentication": "@parameters('$authentication')"
+                    }
+                  },
+                  "Email_requestor_Approved": {
+                    "runAfter": {
+                      "Update_item_Approved": [
+                        "Succeeded"
+                      ]
+                    },
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                        "connectionName": "shared_office365",
+                        "operationId": "SendEmailV2"
+                      },
+                      "parameters": {
+                        "emailMessage/To": "@triggerBody()?['RequestorEmail']",
+                        "emailMessage/Subject": "Approved: @{triggerBody()?['RequestTitle']}",
+                        "emailMessage/Body": "<p>Hello @{triggerBody()?['RequestorName']},</p><p>Your Process Approval request for <b>@{triggerBody()?['SourceSiteAppName']}</b> has been <b style=\"color: green;\">APPROVED</b>.</p><p><b>Request Details:</b></p><ul><li><b>Request Title:</b> @{triggerBody()?['RequestTitle']}</li><li><b>Request ID:</b> #@{body('Create_item')?['ID']}</li><li><b>Phase:</b> @{outputs('Compose_Phase')}</li><li><b>Business Unit:</b> @{triggerBody()?['RequestorBusinessUnit']}</li><li><b>Request Type:</b> @{triggerBody()?['RequestType']}</li><li><b>Approver:</b> @{coalesce(first(body('Start_and_wait_for_an_approval')?['responses'])?['responder']?['displayName'], 'Approver')}</li><li><b>Approver Comments:</b> @{if(empty(coalesce(first(body('Start_and_wait_for_an_approval')?['responses'])?['comments'], '')), 'None provided', coalesce(first(body('Start_and_wait_for_an_approval')?['responses'])?['comments'], ''))}</li></ul><p>You can view the request record in SharePoint: <a href=\"@{body('Create_item')?['{Link}']}\">View Request #@{body('Create_item')?['ID']}</a></p><p>Kind regards,<br>Process Approval Team</p>",
+                        "emailMessage/Importance": "Normal"
+                      },
+                      "authentication": "@parameters('$authentication')"
+                    }
+                  }
+                },
+                "runAfter": {
+                  "Start_and_wait_for_an_approval": [
+                    "Succeeded"
+                  ]
+                },
+                "else": {
+                  "actions": {
+                    "Update_item_Rejected": {
+                      "runAfter": {},
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "PatchItem"
+                        },
+                        "parameters": {
+                          "dataset": "https://cjmprojectsltd.sharepoint.com/sites/LexNet",
+                          "table": "Process Approval",
+                          "id": "@body('Create_item')?['ID']",
+                          "item/Title": "@body('Create_item')?['Title']",
+                          "item/RequestStatus/Value": "Rejected",
+                          "item/ApproverComments": "@{coalesce(first(body('Start_and_wait_for_an_approval')?['responses'])?['comments'], '')}"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    },
+                    "Email_requestor_Rejected": {
+                      "runAfter": {
+                        "Update_item_Rejected": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                          "connectionName": "shared_office365",
+                          "operationId": "SendEmailV2"
+                        },
+                        "parameters": {
+                          "emailMessage/To": "@triggerBody()?['RequestorEmail']",
+                          "emailMessage/Subject": "Rejected: @{triggerBody()?['RequestTitle']}",
+                          "emailMessage/Body": "<p>Hello @{triggerBody()?['RequestorName']},</p><p>Your Process Approval request for <b>@{triggerBody()?['SourceSiteAppName']}</b> has been <b style=\"color: red;\">REJECTED</b>.</p><p><b>Request Details:</b></p><ul><li><b>Request Title:</b> @{triggerBody()?['RequestTitle']}</li><li><b>Request ID:</b> #@{body('Create_item')?['ID']}</li><li><b>Phase:</b> @{outputs('Compose_Phase')}</li><li><b>Approver:</b> @{coalesce(first(body('Start_and_wait_for_an_approval')?['responses'])?['responder']?['displayName'], 'Approver')}</li><li><b>Reason / Comments:</b> @{if(empty(coalesce(first(body('Start_and_wait_for_an_approval')?['responses'])?['comments'], '')), 'No comments provided', coalesce(first(body('Start_and_wait_for_an_approval')?['responses'])?['comments'], ''))}</li></ul><p>You can review the request record in SharePoint: <a href=\"@{body('Create_item')?['{Link}']}\">View Request #@{body('Create_item')?['ID']}</a></p><p>If you have questions regarding this decision, please contact the approver or your department lead.</p><p>Kind regards,<br>Process Approval Team</p>",
+                          "emailMessage/Importance": "High"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    }
+                  }
+                },
+                "expression": {
+                  "and": [
+                    {
+                      "equals": [
+                        "@body('Start_and_wait_for_an_approval')?['outcome']",
+                        "Approve"
+                      ]
+                    }
+                  ]
+                },
+                "type": "If"
+              }
+            }
+          },
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@outputs('Compose_IsTest')",
+                  true
+                ]
+              }
+            ]
+          },
+          "type": "If"
+        },
+        "Test_Summary": {
+          "actions": {
+            "Send_test_summary_to_admin": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2"
+                },
+                "parameters": {
+                  "emailMessage/To": "@variables('AdminEmail')",
+                  "emailMessage/Subject": "[TEST] Process Approval run summary: @{triggerBody()?['RequestTitle']}",
+                  "emailMessage/Body": "<p><b>Test run</b> of the Process Approval flow. No approval or requestor emails were sent.</p><ul><li>Item: <a href=\"@{body('Create_item')?['{Link}']}\">#@{body('Create_item')?['ID']} - @{body('Create_item')?['Title']}</a></li><li>Final status: Approved (Test mode - approval skipped)</li><li>Phase: @{outputs('Compose_Phase')}</li><li>Duplicate: @{outputs('Compose_IsDuplicate')}</li><li>Requestor: @{triggerBody()?['RequestorName']} (@{triggerBody()?['RequestorEmail']})</li><li>Business unit: @{triggerBody()?['RequestorBusinessUnit']}</li><li>Request type: @{triggerBody()?['RequestType']}</li><li>Alignment (Teams / SharePoint / Others): @{triggerBody()?['AlignmentChangeTeams']} / @{triggerBody()?['AlignmentChangeSharePoint']} / @{triggerBody()?['AlignmentChangeOthers']}</li><li>Source site / app: @{triggerBody()?['SourceSiteAppName']}</li><li>Request URL: @{triggerBody()?['RequestURL']}</li><li>Hyperlink update step: @{if(equals(actions('Set_hyperlink_columns')?['status'], 'Succeeded'), 'OK', 'FAILED - check run')}</li></ul><p>The requestor would have received the @{outputs('Compose_Phase')} acknowledgement email.</p>",
+                  "emailMessage/Importance": "Normal"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            }
+          },
+          "runAfter": {
+            "Approval_Workflow": [
+              "Succeeded"
+            ]
+          },
+          "else": {
+            "actions": {}
+          },
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@outputs('Compose_IsTest')",
+                  true
+                ]
+              }
+            ]
+          },
+          "type": "If"
+        }
+      }
+    },
+    "triggerSchema": {
+      "type": "object",
+      "properties": {
+        "RequestTitle": {
+          "title": "RequestTitle",
+          "type": "string",
+          "x-ms-dynamically-added": true,
+          "description": "Request title",
+          "x-ms-content-hint": "TEXT"
+        },
+        "RequestorName": {
+          "title": "RequestorName",
+          "type": "string",
+          "x-ms-dynamically-added": true,
+          "description": "Requestor name",
+          "x-ms-content-hint": "TEXT"
+        },
+        "RequestorEmail": {
+          "title": "RequestorEmail",
+          "type": "string",
+          "x-ms-dynamically-added": true,
+          "description": "Requestor email",
+          "x-ms-content-hint": "TEXT"
+        },
+        "DateRequested": {
+          "title": "DateRequested",
+          "type": "string",
+          "format": "date",
+          "x-ms-dynamically-added": true,
+          "description": "Date requested (yyyy-MM-dd)",
+          "x-ms-content-hint": "DATE"
+        },
+        "RequestorBusinessUnit": {
+          "title": "RequestorBusinessUnit",
+          "type": "string",
+          "x-ms-dynamically-added": true,
+          "description": "AUK, AUM or AAM",
+          "x-ms-content-hint": "TEXT"
+        },
+        "RequestType": {
+          "title": "RequestType",
+          "type": "string",
+          "x-ms-dynamically-added": true,
+          "description": "Teams, SharePoint or One Time Transfer",
+          "x-ms-content-hint": "TEXT"
+        },
+        "AlignmentChangeTeams": {
+          "title": "AlignmentChangeTeams",
+          "type": "string",
+          "x-ms-dynamically-added": true,
+          "description": "Alignment change (Teams)",
+          "x-ms-content-hint": "TEXT"
+        },
+        "AlignmentChangeSharePoint": {
+          "title": "AlignmentChangeSharePoint",
+          "type": "string",
+          "x-ms-dynamically-added": true,
+          "description": "Alignment change (SharePoint)",
+          "x-ms-content-hint": "TEXT"
+        },
+        "AlignmentChangeOthers": {
+          "title": "AlignmentChangeOthers",
+          "type": "string",
+          "x-ms-dynamically-added": true,
+          "description": "Alignment change (Others)",
+          "x-ms-content-hint": "TEXT"
+        },
+        "RequestURL": {
+          "title": "RequestURL",
+          "type": "string",
+          "x-ms-dynamically-added": true,
+          "description": "Request URL",
+          "x-ms-content-hint": "TEXT"
+        },
+        "SourceSiteAppName": {
+          "title": "SourceSiteAppName",
+          "type": "string",
+          "x-ms-dynamically-added": true,
+          "description": "Source site / app name",
+          "x-ms-content-hint": "TEXT"
+        },
+        "IsTest": {
+          "title": "IsTest",
+          "type": "boolean",
+          "x-ms-dynamically-added": true,
+          "description": "Test mode: skips approval and requestor emails",
+          "x-ms-content-hint": "BOOLEAN"
+        }
+      },
+      "required": [
+        "RequestTitle",
+        "RequestorName",
+        "RequestorEmail",
+        "DateRequested",
+        "RequestorBusinessUnit",
+        "RequestType",
+        "RequestURL",
+        "SourceSiteAppName",
+        "IsTest"
+      ]
+    },
+    "state": "Started",
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonl-c6c565cc-c84d-4e6b-8586-ea876de15b89",
+        "connectionReferenceLogicalName": "new_sharedsharepointonline_b8545",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "displayName": "SharePoint",
+        "iconUri": "https://static.powerapps.com/resource/ppcr/releases/v1.0.1827/1.0.1827.4913/sharepointonline/icon.png",
+        "brandColor": "",
+        "tier": "Standard",
+        "apiName": "sharepointonline",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      },
+      "shared_office365": {
+        "connectionName": "shared-office365-68ec454d-1248-4d9a-9cab-27d90f0b0008",
+        "connectionReferenceLogicalName": "new_sharedoffice365_85537",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+        "displayName": "Office 365 Outlook",
+        "iconUri": "https://static.powerapps.com/resource/ppcr/releases/v1.0.1831/1.0.1831.5110/office365/icon.png",
+        "brandColor": "#0078D4",
+        "tier": "Standard",
+        "apiName": "office365",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      },
+      "shared_approvals": {
+        "connectionName": "shared-approvals-972457d0-2de3-4bba-a98b-c80453efdcdc",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+        "displayName": "Standard approvals",
+        "iconUri": "https://static.powerapps.com/resource/ppcr/releases/v1.0.1826/1.0.1826.4893/approvals/icon.png",
+        "brandColor": "",
+        "tier": "Standard",
+        "apiName": "approvals",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "installedConnectionReferences": {},
+    "createdTime": "2026-10-19T10:50:51.7347037Z",
+    "lastModifiedTime": "2026-10-19T15:42:06.4347353Z",
+    "flowSuspensionReason": "None",
+    "environment": {
+      "name": "Default-36037c25-6fc1-4418-8edd-abbc98e96cbc",
+      "type": "Microsoft.ProcessSimple/environments",
+      "id": "/providers/Microsoft.ProcessSimple/environments/Default-36037c25-6fc1-4418-8edd-abbc98e96cbc"
+    },
+    "definitionSummary": {
+      "triggers": [
+        {
+          "type": "Request",
+          "kind": "Button"
+        }
+      ],
+      "actions": [
+        {
+          "type": "InitializeVariable"
+        },
+        {
+          "type": "InitializeVariable"
+        },
+        {
+          "type": "InitializeVariable"
+        },
+        {
+          "type": "Compose"
+        },
+        {
+          "type": "If"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "GetItems"
+        },
+        {
+          "type": "Compose"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "PostItem"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "HttpRequest"
+        },
+        {
+          "type": "If"
+        },
+        {
+          "type": "Compose"
+        },
+        {
+          "type": "If"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "PatchItem"
+        },
+        {
+          "type": "If"
+        },
+        {
+          "type": "If"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "PostItem"
+        },
+        {
+          "type": "If"
+        },
+        {
+          "type": "Terminate"
+        },
+        {
+          "type": "Select"
+        },
+        {
+          "type": "If"
+        },
+        {
+          "type": "Terminate"
+        },
+        {
+          "type": "Switch"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "PatchItem"
+        },
+        {
+          "type": "OpenApiConnectionWebhook",
+          "swaggerOperationId": "StartAndWaitForAnApproval"
+        },
+        {
+          "type": "If"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "SendEmailV2"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "SendEmailV2"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "SendEmailV2"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "SendEmailV2"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "SendEmailV2"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "SendEmailV2"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "SendEmailV2"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "SendEmailV2"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "PatchItem"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "SendEmailV2"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "PatchItem"
+        },
+        {
+          "type": "OpenApiConnection",
+          "swaggerOperationId": "SendEmailV2"
+        }
+      ]
+    },
+    "creator": {
+      "tenantId": "36037c25-6fc1-4418-8edd-abbc98e96cbc",
+      "objectId": "9d690fea-7692-4e85-835e-3efcdcd3beae",
+      "userId": "9d690fea-7692-4e85-835e-3efcdcd3beae",
+      "userType": "ActiveDirectory"
+    },
+    "flowTriggerUri": "https://default-36037c25-6fc1-4418-8edd-abbc98e96cbc.03.common.uk.azure-apihub.net:443/apim/logicflows/2F08F0E2320B4997BCB90FD6FF143344-1F07710BDB205895/triggers/manual/run?api-version=2016-06-01",
+    "installationStatus": "Installed",
+    "provisioningMethod": "FromDefinition",
+    "flowFailureAlertSubscribed": true,
+    "referencedResources": [
+      {
+        "service": "sharepoint",
+        "resource": {
+          "site": "https://cjmprojectsltd.sharepoint.com/sites/LexNet",
+          "list": "[DYNAMIC_VALUE]"
+        },
+        "referencers": [
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/GetItems"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PostItem"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PostItem"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          },
+          {
+            "referenceSourceType": "Triggers",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/GetItems"
+          },
+          {
+            "referenceSourceType": "Triggers",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PostItem"
+          },
+          {
+            "referenceSourceType": "Triggers",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          },
+          {
+            "referenceSourceType": "Triggers",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PostItem"
+          },
+          {
+            "referenceSourceType": "Triggers",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          },
+          {
+            "referenceSourceType": "Triggers",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          },
+          {
+            "referenceSourceType": "Triggers",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          }
+        ]
+      },
+      {
+        "service": "sharepoint",
+        "resource": {
+          "site": "https://cjmprojectsltd.sharepoint.com/sites/LexNet"
+        },
+        "referencers": [
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/HttpRequest"
+          },
+          {
+            "referenceSourceType": "Triggers",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/HttpRequest"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/GetItems"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PostItem"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/HttpRequest"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PostItem"
+          }
+        ]
+      },
+      {
+        "service": "sharepoint",
+        "resource": {
+          "site": "https://cjmprojectsltd.sharepoint.com/sites/LexNet",
+          "fileId": "@body('Create_item')?['ID']"
+        },
+        "referencers": [
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          },
+          {
+            "referenceSourceType": "Actions",
+            "operationId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/apiOperations/PatchItem"
+          }
+        ]
+      }
+    ],
+    "isManaged": false,
+    "machineDescriptionData": {}
+  }
+}
